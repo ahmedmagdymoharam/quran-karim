@@ -1,0 +1,33 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red36\green255\blue255;}
+{\*\expandedcolortbl;;\cssrgb\c4983\c100000\c100000;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf2 # 1) Install tools (once only)\cf0 \
+brew install ghostscript imagemagick\
+\
+\cf2 # 2) PDF \uc0\u8594  high quality pages (PNG)\cf0 \
+mkdir -p output && gs -dNOPAUSE -dBATCH \\\
+  -sDEVICE=png16m \\\
+  -r720 \\\
+  -dTextAlphaBits=4 \\\
+  -dGraphicsAlphaBits=4 \\\
+  -sOutputFile="output/page-%04d.png" \\\
+  "input.pdf"\
+\
+\cf2 # 3) PNG \uc0\u8594  Clean AVIF (transparent background + white text + compression + rename)\cf0 \
+mkdir -p final && i=1 && find output -maxdepth 1 -type f -iname "*.png" -print0 | sort -z | while IFS= read -r -d '' f; do\
+  magick "$f" \\\
+    -resize 40% \\\
+    -alpha set \\\
+    -colorspace sRGB \\\
+    -fuzz 6% \\\
+    -fill none -opaque "#ffffff" \\\
+    -strip \\\
+    -define avif:effort=10 \\\
+    -quality 20 \\\
+    "final/$(printf "%03d" $i).avif"\
+  i=$((i+1))\
+done}
